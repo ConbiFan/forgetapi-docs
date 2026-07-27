@@ -1,0 +1,150 @@
+/* ========================================
+   忘却森 ブランドカラー（緑系ダーク）
+   ======================================== */
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #040804;
+  --md-default-fg-color: #c8d8c8;
+  --md-primary-fg-color: #1a5c2a;
+  --md-primary-fg-color--light: #2a7a3a;
+  --md-primary-fg-color--dark: #0e3a1a;
+  --md-accent-fg-color: #44ff88;
+  --md-typeset-a-color: #66ffaa;
+  --md-code-bg-color: #0a140a;
+  --md-code-fg-color: #c8e8c8;
+  --md-footer-bg-color: #020602;
+  --md-footer-bg-color--dark: #010301;
+}
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #1a6b2a;
+  --md-primary-fg-color--light: #2a8a3a;
+  --md-primary-fg-color--dark: #0e4a1a;
+  --md-accent-fg-color: #1a8a3a;
+  --md-typeset-a-color: #1a6b2a;
+}
+
+/* ========================================
+   ヘッダー
+   ======================================== */
+
+.md-header {
+  background: linear-gradient(180deg, #0a1a0a 0%, #061006 100%);
+  border-bottom: 1px solid rgba(0, 255, 80, 0.1);
+}
+
+.md-header__title {
+  text-shadow: 0 0 12px rgba(0, 255, 80, 0.25);
+  letter-spacing: 0.08em;
+}
+
+/* ========================================
+   サイドバー
+   ======================================== */
+
+.md-sidebar {
+  border-right: 1px solid rgba(0, 255, 80, 0.06);
+}
+
+.md-nav__link--active {
+  color: #44ff88 !important;
+  text-shadow: 0 0 6px rgba(68, 255, 136, 0.3);
+}
+
+/* ========================================
+   コードブロック
+   ======================================== */
+
+.highlight {
+  background: #0a140a !important;
+  border: 1px solid rgba(0, 255, 80, 0.12) !important;
+  border-radius: 8px !important;
+}
+
+.highlight pre {
+  background: transparent !important;
+}
+
+code {
+  border-radius: 4px;
+}
+
+/* ========================================
+   リンク
+   ======================================== */
+
+.md-typeset a {
+  transition: all 0.2s ease;
+}
+
+.md-typeset a:hover {
+  text-shadow: 0 0 8px rgba(100, 255, 170, 0.35);
+}
+
+/* ========================================
+   Admonition（注意・ヒント等）
+   ======================================== */
+
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #2a7a3a;
+}
+
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background-color: rgba(42, 122, 58, 0.15);
+}
+
+/* ========================================
+   カードグリッド（トップページ用）
+   ======================================== */
+
+.grid.cards > ul > li {
+  border: 1px solid rgba(0, 255, 80, 0.1) !important;
+  background: rgba(10, 20, 10, 0.4) !important;
+  border-radius: 8px !important;
+  transition: all 0.25s ease !important;
+}
+
+.grid.cards > ul > li:hover {
+  border-color: rgba(68, 255, 136, 0.3) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 80, 0.08) !important;
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   フッター
+   ======================================== */
+
+.md-footer {
+  border-top: 1px solid rgba(0, 255, 80, 0.06);
+}
+
+/* ========================================
+   検索バー
+   ======================================== */
+
+.md-search__input {
+  background: rgba(10, 20, 10, 0.6) !important;
+}
+
+/* ========================================
+   スクロールバー
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #040804;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a3a1a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a5a2a;
+}

@@ -1,0 +1,64 @@
+site_name: ForgetAPI
+site_url: https://conbifan.github.io/forgetapi-docs/
+site_description: 忘却森 Mod API 公式ドキュメント
+repo_url: https://github.com/conbifan/forgetapi-docs
+
+theme:
+  name: material
+  language: ja
+  palette:
+    - scheme: slate
+      primary: green
+      accent: light green
+      toggle:
+        icon: material/brightness-4
+        name: ライトモード
+    - scheme: default
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: ダークモード
+  font:
+    text: Noto Sans JP
+    code: JetBrains Mono
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - stylesheets/custom.css
+
+nav:
+  - Home: index.md
+  - Guide:
+      - Mod導入方法: guide/player-install.md
+      - Mod作成はじめかた: guide/mod-author-start.md
+      - .fmファイル仕様: guide/fm-spec.md
+  - API Reference:
+      - Core: api/core.md
+  - Guidelines:
+      - チェックリスト: guidelines/checklist.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
