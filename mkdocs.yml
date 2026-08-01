@@ -1,5 +1,5 @@
 site_name: ForgetAPI
-site_url: https://conbifan.github.io/forgetapi-docs/
+site_url: https://www.forgetapi.f5.si/
 site_description: 忘却森 Mod API 公式ドキュメント
 repo_url: https://github.com/conbifan/forgetapi-docs
 
@@ -39,13 +39,13 @@ extra_css:
 nav:
   - Home: index.md
   - Guide:
-      - Mod導入方法: guide/player-install.md
-      - Mod作成はじめかた: guide/mod-author-start.md
-      - .fmファイル仕様: guide/fm-spec.md
+    - Mod導入方法: guide/player-install.md
+    - Mod作成はじめかた: guide/mod-author-start.md
+    - .fmファイル仕様: guide/fm-spec.md
   - API Reference:
-      - Core: api/core.md
+    - Core: api/core.md
   - Guidelines:
-      - チェックリスト: guidelines/checklist.md
+    - チェックリスト: guidelines/checklist.md
 
 markdown_extensions:
   - pymdownx.highlight:

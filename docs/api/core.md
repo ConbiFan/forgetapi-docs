@@ -1,520 +1,341 @@
-# ForgetAPI Reference
+# API リファレンス (v2.0.0)
 
-全APIのリファレンス。
+ForgetAPI v2.0.0 は、v1.1.0 から大幅に拡張され、**43カテゴリ・約316メソッド・組み込みイベント84種** を提供します。
 
----
+!!! warning "⚠️ v1.1.0 からの破壊的変更"
+    v1.1.0 向けに書かれた Mod は、そのままでは正常に動作しない可能性があります。
 
-## Core
-
-### getVersion()
-
-APIバージョンを返す。
-
-    ForgetAPI.getVersion(); // "1.0.0"
-
-### getInfo()
-
-API情報をオブジェクトで返す。
-
-    ForgetAPI.getInfo();
-    // {name:"ForgetAPI", version:"1.0.0"}
-
-### safeRun(callback, modName)
-
-エラーを隔離して実行。例外時null返却。
-
-    ForgetAPI.safeRun(() => {
-        // 危険な処理
-    }, "MyMod");
-
-### registerMod(mod)
-
-Modを登録。通常はローダーが自動呼出。
-
-    ForgetAPI.registerMod({
-        name: "MyMod",
-        version: "1.0.0",
-        instance: modInstance
-    });
+    | # | 変更点 | 影響 |
+    |---|---|---|
+    | 1 | `network.send` がエラー時に **reject** | `try/catch` 必須 |
+    | 2 | `file.*` が**サンドボックス化** | ゲームルート外はブロック |
+    | 3 | `player.inventory()` が**コピー**を返す | 直接 `.push()` 不可。`addItem` を使用 |
+    | 4 | `item.give` が**実際に付与** | 自前付与は二重付与になる |
+    | 5 | `world.setFog` が数値を `{density}` に正規化 | `getFog()` の戻り値がオブジェクトに |
+    | 6 | Mod ローダーが**メジャーバージョンをチェック** | `api: "1.x.x"` はロード拒否 |
 
 ---
 
-## Logger
+## API 使用上の注意
 
-### logger.info(msg) / warn(msg) / error(msg)
-
-    ForgetAPI.logger.info("loaded");
-    ForgetAPI.logger.warn("deprecated");
-    ForgetAPI.logger.error("not found");
-
-### getLogs()
-
-全ログ履歴を配列で返す。
-
-    ForgetAPI.getLogs();
-    // [{type, message, time}, ...]
+- **永続保存**: `save` は揮発性。永続化には `storage` を使用
+- **サンドボックス**: `file.*` はゲームルート外をブロック
+- **自動実行**: `statusEffect.tick` / `trigger.check` は本体が自動呼出
+- **Input**: Electron レンダラー専用
+- **Network**: `fetch` ベース。エラー時は reject
 
 ---
 
-## Event
+## 1. Core
 
-### event.on(name, callback)
-
-    ForgetAPI.event.on(
-        "achievementUnlock",
-        (data) => console.log(data.id)
-    );
-
-### event.emit(name, data)
-
-    ForgetAPI.event.emit("myEvent", {key: "val"});
-
-### event.off(name, callback)
-
-    ForgetAPI.event.off("myEvent", cb);
-
-### 組み込みイベント
-
-| イベント | データ | 説明 |
-| --- | --- | --- |
-| achievementUnlock | {id} | 実績解除 |
-| entitySpawn | {id,pos,health} | 生成 |
-| itemGive | {player,item,count} | 付与 |
-| mapLoad | {map} | マップ読込 |
-| gamePause | - | ポーズ開始 |
-| gameResume | - | ポーズ解除 |
-| gameRestart | - | 再開 |
-| gameQuit | - | 終了 |
-| stateChange | {state} | 状態変更 |
-| menuOpen | {menu} | メニュー表示 |
-| notification | {message,type} | 通知 |
-| soundPlay | {id,volume} | 再生 |
-| soundStop | {id} | 停止 |
-| shaderApply | {shader} | 適用 |
-| shaderDisable | - | 無効化 |
-| cameraMove | {pos} | カメラ移動 |
-| cameraShake | {power,time} | シェイク |
-| particleSpawn | {id,pos} | パーティクル |
-| ambientChange | {value} | 環境光 |
-| fogColorChange | {color} | 霧色 |
-| postEffectEnable | {effect} | PE有効 |
-| postEffectDisable | {id} | PE無効 |
-| jumpscare | {data} | ジャンプスケア |
-| fearChange | {value} | 恐怖値 |
-| atmosphereChange | {data} | 雰囲気 |
-| modRegister | {mod} | Mod登録 |
-| modEnable | {mod} | Mod有効 |
-| modDisable | {mod} | Mod無効 |
-| modReload | {mod} | Modリロード |
-| resourceReload | - | リソース再読込 |
-| renderQualityChange | {q} | 描画品質 |
-| rendererReload | - | レンダラー再読込 |
-| weatherChange | {type} | 天候 |
-| timeChange | {value} | 時間 |
-| questComplete | {quest,player} | クエスト完了 |
-| questReward | {id,reward} | 報酬 |
-| storyPlay | {scene} | ストーリー再生 |
-| storyStop | - | ストーリー停止 |
-| dialogue | {char,text} | ダイアログ |
-| animationPlay | {id,target} | アニメ再生 |
-| animationStop | {id,target} | アニメ停止 |
-| playerTeleport | {player} | テレポート |
-| recipeAdd | {data} | レシピ追加 |
+**`getVersion()` / `getInfo()` / `safeRun(callback, modName)` / `registerMod(mod)`**
 
 ---
 
-## Entity
+## 2. Logger
 
-### entity.add(data)
-
-    ForgetAPI.entity.add({
-        id:"ghost", name:"Ghost", health:100
-    });
-
-### entity.get(id) / remove(id) / getAll()
-
-    ForgetAPI.entity.get("ghost");
-    ForgetAPI.entity.remove("ghost");
-    ForgetAPI.entity.getAll();
-
-### entity.spawn(id, position)
-
-    ForgetAPI.entity.spawn("ghost", {x:10,y:0,z:20});
-
-### entity.setModel(id, file) / setTexture(id, file)
-
-    ForgetAPI.entity.setModel("ghost","g.obj");
-    ForgetAPI.entity.setTexture("ghost","g.png");
-
-### entity.addComponent(id, name, data)
-
-    ForgetAPI.entity.addComponent("ghost","ai",{type:"patrol"});
-
-### entity.registerAI(id, ai)
-
-    ForgetAPI.entity.registerAI("ghost", ai);
+**`logger.info(msg)` / `warn(msg)` / `error(msg)` / `getLogs()`**
 
 ---
 
-## Item
+## 3. Event
 
-### item.add(data) / get(id) / remove(id)
+**`event.on(name, callback)` / `off(name, callback)` / `once(name, callback)` / `emit(name, data)`**
 
-    ForgetAPI.item.add({id:"key_red", name:"赤い鍵"});
-    ForgetAPI.item.get("key_red");
-    ForgetAPI.item.remove("key_red");
-
-### item.give(player, id, count)
-
-    ForgetAPI.item.give("p1","key_red",1);
-
-### item.use(id, callback)
-
-    ForgetAPI.item.use("potion",()=>heal(50));
-
-### item.recipe(data)
-
-    ForgetAPI.item.recipe({output:"sword", input:["iron","stick"]});
+!!! note "主要イベント（v2.0.0 新規含む）"
+    `storageSave`, `settingsChange`, `keybindAction`, `statusEffectApply/Remove/Tick`, `triggerEnter/Leave`, `dialogueStart/Node/Choice/End`, `lootRoll`, `extensionRegister/Remove`, `screenActivate/Deactivate/Reset`
 
 ---
 
-## Object
+## 4. Entity
 
-### object.add(data) / get(id) / remove(id)
-
-    ForgetAPI.object.add({id:"door",name:"扉"});
-    ForgetAPI.object.get("door");
-    ForgetAPI.object.remove("door");
-
-### object.replace(id, data)
-
-    ForgetAPI.object.replace("door",{name:"鉄扉"});
-
-### object.interact(id, callback)
-
-    ForgetAPI.object.interact("door", ()=>openDoor());
+**`entity.add(data)` / `get(id)` / `remove(id)` / `getAll()` / `spawn(id, pos)` / `setModel(id, file)` / `setTexture(id, file)` / `addComponent(id, name, data)` / `registerAI(id, ai)`**
 
 ---
 
-## Player
+## 5. Item
 
-### player.register(id, data)
+**`item.add(data)` / `get(id)` / `remove(id)` / `give(playerId, id, count)` / `use(id, callback)` / `recipe(data)`**
 
-    ForgetAPI.player.register("p1",{health:100, position:{x:0,y:0,z:0}});
-
-### player.get(id)
-
-    ForgetAPI.player.get("p1");
-
-### player.teleport(id, pos)
-
-    ForgetAPI.player.teleport("p1", {x:50,y:0,z:50});
-
-### player.damage(id, value) / heal(id, value)
-
-    ForgetAPI.player.damage("p1", 20);
-    ForgetAPI.player.heal("p1", 30);
-
-### player.setStatus(id, status, value)
-
-    ForgetAPI.player.setStatus("p1","fear",80);
-
-### player.inventory(id)
-
-    ForgetAPI.player.inventory("p1");
+!!! warning "v2.0.0 変更"
+    `item.give` が実際にインベントリへ付与するように
 
 ---
 
-## Map
+## 6. Object
 
-### map.add(data) / get(id) / remove(id)
-
-    ForgetAPI.map.add({id:"forest",name:"森"});
-    ForgetAPI.map.get("forest");
-    ForgetAPI.map.remove("forest");
-
-### map.replace(id, data) / load(id)
-
-    ForgetAPI.map.replace("forest",{fog:0.06});
-    ForgetAPI.map.load("forest");
+**`object.add(data)` / `get(id)` / `remove(id)` / `replace(id, data)` / `interact(id, callback)`**
 
 ---
 
-## World
+## 7. Player
 
-### world.setTime(value) / getTime()
+**`player.register(id, data)` / `get(id)` / `teleport(id, pos)` / `damage(id, value)` / `heal(id, value)` / `setStatus(id, status, value)`**
 
-    ForgetAPI.world.setTime(18000);
-    ForgetAPI.world.getTime();
+**`player.inventory(id)` / `addItem(id, itemId, count)` / `removeItem(id, itemId, count)` / `itemCount(id, itemId)` / `hasItem(id, itemId, count)`** 🆕
 
-### world.setWeather(type) / getWeather()
-
-    ForgetAPI.world.setWeather("rain");
-    ForgetAPI.world.getWeather();
-
-### world.setFog(data) / getFog()
-
-    ForgetAPI.world.setFog({density:0.05});
-    ForgetAPI.world.getFog();
-
-### world.addObject(data)
-
-    ForgetAPI.world.addObject({type:"tree", pos:{x:10,y:0,z:20}});
+!!! warning "注意"
+    `damage/heal` はクランプなし。`inventory()` はコピーを返す
 
 ---
 
-## Achievement
+## 8. Map
 
-### achievement.init(filePath)
-
-    ForgetAPI.achievement.init("config/achievements.json");
-
-### achievement.add(data)
-
-    ForgetAPI.achievement.add({id:"first_key", name:"最初の鍵"});
-
-### achievement.unlock(id)
-
-    ForgetAPI.achievement.unlock("first_key");
-
-### achievement.has(id)
-
-    ForgetAPI.achievement.has("first_key"); // true/false
-
-### achievement.list()
-
-    ForgetAPI.achievement.list();
+**`map.add(data)` / `get(id)` / `remove(id)` / `replace(id, data)` / `load(id)`**
 
 ---
 
-## Quest
+## 9. World
 
-### quest.add(data) / get(id)
+**`world.setTime(value)` / `getTime()` / `setWeather(type)` / `getWeather()` / `setFog(data)` / `getFog()` / `addObject(data)`**
 
-    ForgetAPI.quest.add({id:"q1", name:"鍵を集めろ"});
-    ForgetAPI.quest.get("q1");
-
-### quest.complete(id, player) / reward(id, reward)
-
-    ForgetAPI.quest.complete("q1","p1");
-    ForgetAPI.quest.reward("q1",{xp:100});
+!!! warning "v2.0.0 変更"
+    `setFog(数値)` は `{density: 数値}` に正規化
 
 ---
 
-## Horror
+## 10. Achievement
 
-### horror.addJumpscare(data) / playJumpscare(id)
-
-    ForgetAPI.horror.addJumpscare({id:"scare1", sound:"scream.ogg"});
-    ForgetAPI.horror.playJumpscare("scare1");
-
-### horror.setFear(value) / fog(value)
-
-    ForgetAPI.horror.setFear(80);
-    ForgetAPI.horror.fog(0.06);
-
-### horror.setAtmosphere(data)
-
-    ForgetAPI.horror.setAtmosphere({fog:0.08, light:0.2});
+**`achievement.init(filePath)` / `add(data)` / `unlock(id)` / `has(id)` / `list()`**
 
 ---
 
-## Story
+## 11. Quest
 
-### story.addScene(data) / play(id) / stop()
-
-    ForgetAPI.story.addScene({id:"intro", text:"森に迷い込んだ..."});
-    ForgetAPI.story.play("intro");
-    ForgetAPI.story.stop();
-
-### story.dialogue(character, text)
-
-    ForgetAPI.story.dialogue("???", "誰だ...?");
+**`quest.add(data)` / `get(id)` / `complete(id, player)` / `reward(id, reward)`**
 
 ---
 
-## UI
+## 12. Horror
 
-### ui.addMenu(data) / removeMenu(id) / showMenu(id)
-
-    ForgetAPI.ui.addMenu({id:"shop",title:"店"});
-    ForgetAPI.ui.showMenu("shop");
-
-### ui.notification(message, type)
-
-    ForgetAPI.ui.notification("保存した","info");
-
-### ui.addButton(menu, id, data)
-
-    ForgetAPI.ui.addButton("shop","buy",{label:"購入"});
+**`horror.addJumpscare(data)` / `playJumpscare(id)` / `setFear(value)` / `fog(value)` / `setAtmosphere(data)`**
 
 ---
 
-## Sound
+## 13. Story
 
-### sound.add(id, file) / get(id) / remove(id)
+**`story.addScene(data)` / `play(id)` / `stop()` / `dialogue(character, text)`**
 
-    ForgetAPI.sound.add("bgm","bgm.ogg");
-    ForgetAPI.sound.get("bgm");
-
-### sound.play(id, volume) / stop(id)
-
-    ForgetAPI.sound.play("bgm", 0.8);
-    ForgetAPI.sound.stop("bgm");
+!!! note "分岐会話には v2.0.0 の `dialogue` を使用"
 
 ---
 
-## Texture / Model / Animation
+## 14. UI
 
-### texture.add / replace / remove / get
+**`ui.addMenu(data)` / `removeMenu(id)` / `showMenu(id)` / `hide(id)` / `notification(message, type)` / `addButton(menu, id, data)` / `setHTML(id, html)` / `appendHTML(id, html)` / `clear(id)` / `addStyle(css)` / `removeStyle(id)` / `setBackground(id, image)` / `setBackgroundColor(id, color)` / `setVideo(id, video)` / `setMusic(id, music)` / `setText(id, text)` / `setImage(id, image)`**
 
-    ForgetAPI.texture.add("t1","tex.png");
-    ForgetAPI.texture.replace("t1","new.png");
-
-### model.add / get / replace / remove
-
-    ForgetAPI.model.add({id:"m1",file:"m.obj"});
-
-### animation.add / get / play / stop
-
-    ForgetAPI.animation.add({id:"walk"});
-    ForgetAPI.animation.play("walk","ghost");
-    ForgetAPI.animation.stop("walk","ghost");
+!!! warning "セキュリティ"
+    `setHTML` はサニタイズされた HTML のみを渡すこと
 
 ---
 
-## Shader / PostEffect / Renderer
+## 15. Sound
 
-### shader.add / apply / disable
-
-    ForgetAPI.shader.add({id:"blur"});
-    ForgetAPI.shader.apply("blur");
-    ForgetAPI.shader.disable();
-
-### postEffect.add / enable / disable
-
-    ForgetAPI.postEffect.add({id:"vignette"});
-    ForgetAPI.postEffect.enable("vignette");
-
-### renderer.setQuality / setResolution / reload
-
-    ForgetAPI.renderer.setQuality("high");
-    ForgetAPI.renderer.setResolution(1920,1080);
-    ForgetAPI.renderer.reload();
+**`sound.add(id, file)` / `get(id)` / `remove(id)` / `play(id, volume)` / `stop(id)`**
 
 ---
 
-## Particle / Lighting / Camera
+## 16. Texture / Model / Animation
 
-### particle.add / spawn / remove
-
-    ForgetAPI.particle.add({id:"fire"});
-    ForgetAPI.particle.spawn("fire",{x:0,y:0,z:0});
-
-### lighting.add / setAmbient / setFogColor
-
-    ForgetAPI.lighting.add({id:"torch"});
-    ForgetAPI.lighting.setAmbient(0.3);
-    ForgetAPI.lighting.setFogColor(0x010101);
-
-### camera.move / shake / reset
-
-    ForgetAPI.camera.move({x:0,y:5,z:0});
-    ForgetAPI.camera.shake(0.5, 30);
-    ForgetAPI.camera.reset();
+**`texture.add/replace/remove/get` / `model.add/get/replace/remove` / `animation.add/get/play/stop`**
 
 ---
 
-## Save / Config
+## 17. Shader / PostEffect / Renderer
 
-### save.set / get / remove / all / clear
-
-    ForgetAPI.save.set("score",100);
-    ForgetAPI.save.get("score");
-    ForgetAPI.save.all();
-
-### config.set / get / has / remove
-
-    ForgetAPI.config.set("diff","hard");
-    ForgetAPI.config.get("diff","normal");
+**`shader.add/apply/disable` / `postEffect.add/enable/disable` / `renderer.setQuality/setResolution/reload`**
 
 ---
 
-## Registry / Statistics / Scheduler
+## 18. Particle / Lighting / Camera
 
-### registry.register / get / getAll
-
-    ForgetAPI.registry.register("block","stone",{hardness:3});
-    ForgetAPI.registry.get("block","stone");
-
-### statistics.add / get / reset
-
-    ForgetAPI.statistics.add("kills",1);
-    ForgetAPI.statistics.get("kills");
-
-### scheduler.run / repeat / cancel
-
-    const id = ForgetAPI.scheduler.run(()=>console.log("done"), 1000);
-    ForgetAPI.scheduler.cancel(id);
+**`particle.add/spawn/remove` / `lighting.add/setAmbient/setFogColor` / `camera.move/shake/rotate/reset`**
 
 ---
 
-## Game / Permission / Dependency
+## 19. Save / Config
 
-### game.pause / resume / getState
+**`save.set/get/remove/all/clear` / `config.set/get/has/remove`**
 
-    ForgetAPI.game.pause();
-    ForgetAPI.game.resume();
-    ForgetAPI.game.getState(); // "paused"
-
-### permission.add / has / remove
-
-    ForgetAPI.permission.add("admin","conbi");
-    ForgetAPI.permission.has("admin","conbi");
-
-### dependency.require / check
-
-    ForgetAPI.dependency.require("DLCAPI");
-    ForgetAPI.dependency.check(["DLCAPI"]);
+!!! warning "揮発性"
+    `save` はメモリのみ。永続化には `storage` を使用
 
 ---
 
-## Resource / Localization / Lang
+## 20. Math
 
-### resource.texture / sound / model / reload
-
-    ForgetAPI.resource.texture("t1","t.png");
-    ForgetAPI.resource.reload();
-
-### localization.add / get
-
-    ForgetAPI.localization.add("ja","title","忘却森");
-    ForgetAPI.localization.get("ja","title");
-
-### lang.add / get / setLanguage / current
-
-    ForgetAPI.lang.add("title","忘却森");
-    ForgetAPI.lang.setLanguage("ja");
-    ForgetAPI.lang.current(); // "ja"
+**`math.random(min, max)` / `clamp(value, min, max)` / `lerp(a, b, t)` / `distance(a, b)`**
 
 ---
 
-## Math / File / Network / Timer
+## 21. Timer
 
-### math.random / clamp / lerp / distance
+**`timer.setTimeout/setInterval/clearTimeout/clearInterval/clear`**
 
-    ForgetAPI.math.random(1,10);
-    ForgetAPI.math.clamp(15,0,10); // 10
-    ForgetAPI.math.lerp(0,100,0.5); // 50
+---
 
-### file.read / write / exists / remove
+## 22. File
 
-    ForgetAPI.file.exists("mods/mod.txt");
+**`file.read(path)` / `write(path, data)` / `exists(path)` / `remove(path)`**
 
-### network.send / receive / disconnect
+!!! warning "v2.0.0 変更"
+    サンドボックス化。ゲームルート外はブロック
 
-    ForgetAPI.network.send("ch",{msg:"hi"});
+---
 
-### timer.setTimeout / setInterval / clear
+## 23. Input
 
-    ForgetAPI.timer.setTimeout(()=>{},1000);
+**`input.isKeyDown(code)` / `isMouseDown(button)` / `mouseX()` / `mouseY()` / `lockMouse()` / `unlockMouse()` / `isLocked()`**
+
+!!! note "Electron レンダラー専用"
+
+---
+
+## 24. Lang
+
+**`lang.add(key, text, lang)` / `get(key, fallback)` / `setLanguage(lang)` / `current()`**
+
+---
+
+## 25. Debug
+
+**`debug.log/warn/error(data)` / `profiler(label)`**
+
+---
+
+## 26. Command
+
+**`command.add(name, callback)` / `remove(name)` / `execute(text)` / `list()`**
+
+---
+
+## 27. Scene
+
+**`scene.add(data)` / `load(id)` / `unload(id)` / `reload()` / `current()`**
+
+---
+
+## 28. Network
+
+**`network.send(url, data, options)` / `receive(channel, callback)` / `disconnect()`**
+
+!!! warning "セキュリティ"
+    `try/catch` でエラー処理必須
+
+---
+
+## 29. Registry / Statistics / Scheduler
+
+**`registry.register/get/getAll/remove` / `statistics.set/add/get/reset` / `scheduler.run/repeat/cancel`**
+
+---
+
+## 30. Game / Permission / Dependency
+
+**`game.pause/resume/getState/setState` / `permission.add/has/remove` / `dependency.require/check`**
+
+---
+
+## 31. Resource / Localization
+
+**`resource.texture/sound/model/reload` / `localization.add/get`**
+
+---
+
+## 32. Menu (非推奨)
+
+`ui` のエイリアス。新規コードでは `ui` を使用。
+
+---
+
+# v2.0.0 新規カテゴリ (33〜42)
+
+---
+
+## 33. Storage 🆕
+
+**`storage.set(modId, key, value)` / `get(modId, key, defaultValue)` / `remove(modId, key)` / `keys(modId)` / `clear(modId)`**
+
+!!! note "永続保存"
+    `saves/mod_storage/<modId>.json` に保存。イベント: `storageSave`
+
+---
+
+## 34. Settings 🆕
+
+**`settings.define(modId, defs)` / `get(modId, id)` / `set(modId, id, value)` / `getAll(modId)` / `reset(modId)`**
+
+!!! note "スキーマ付き設定"
+    `storage` 上に永続化。イベント: `settingsChange`
+
+---
+
+## 35. Keybind 🆕
+
+**`keybind.register(modId, id, defaultCode, label)` / `on(modId, id, callback)` / `off(modId, id, callback)` / `getKey(modId, id)` / `setKey(modId, id, code)` / `list()`**
+
+!!! note "入力アクション抽象化"
+    イベント: `keybindAction`
+
+---
+
+## 36. StatusEffect 🆕
+
+**`statusEffect.define(id, def)` / `apply(targetId, effectId, opts)` / `remove(targetId, effectId)` / `has(targetId, effectId)` / `getActive(targetId)` / `clear(targetId)`**
+
+!!! note "時間付きバフ/デバフ"
+    `tick(deltaMs)` は本体が自動呼出。イベント: `statusEffectApply/Remove/Tick`
+
+---
+
+## 37. Trigger 🆕
+
+**`trigger.addArea(id, data)` / `removeArea(id)` / `onEnter(id, callback)` / `onLeave(id, callback)` / `isInside(id, entityId)` / `check(entityId, pos)`**
+
+!!! note "領域イベント"
+    `check` は本体が自動呼出。イベント: `triggerEnter/Leave`
+
+---
+
+## 38. Inventory 🆕
+
+**`inventory.create(id, options)` / `add(id, itemId, count)` / `removeItem(id, itemId, count)` / `count(id, itemId)` / `has(id, itemId, count)` / `list(id)` / `clear(id)` / `transfer(fromId, toId, itemId, count)`**
+
+!!! note "コンテナ型インベントリ"
+    `player.inventory` とは別
+
+---
+
+## 39. Dialogue 🆕
+
+**`dialogue.add(id, tree)` / `play(id, context)` / `choose(index)` / `stop()` / `current()`**
+
+!!! note "分岐会話ツリー"
+    イベント: `dialogueStart/Node/Choice/End`
+
+---
+
+## 40. Loot 🆕
+
+**`loot.add(id, entries)` / `get(id)` / `remove(id)` / `roll(id, count)`**
+
+!!! note "ルートテーブル"
+    イベント: `lootRoll`
+
+---
+
+## 41. Extension 🆕
+
+**`extension.define(config)` / `call(id, method, ...args)` / `has(id, method)` / `get(id)` / `remove(id)` / `list()`**
+
+!!! note "ユーザーAPI登録"
+    コアAPIの上書きは不可。イベント: `extensionRegister/Remove`
+
+---
+
+## 42. Screen 🆕
+
+**`screen.registerSlot(id, options)` / `provide(providerId, config)` / `activate(providerId)` / `deactivate(providerId)` / `active(slot)` / `resetToDefault()` / `layer.add/show/hide/remove` / `theme.set/get`**
+
+!!! note "UI革命"
+    1スロット1勝者。`resetToDefault` は脱出ハッチ。イベント: `screenActivate/Deactivate/Reset`

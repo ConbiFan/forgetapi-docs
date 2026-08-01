@@ -3,7 +3,8 @@
 ## 対応環境
 
 - Windows 64bit
-- 忘却森 v1.0.0以上
+- Linux 64bit
+- 忘却森 v2.0.0 以上
 
 ## 手順
 
@@ -18,19 +19,23 @@
 
 インストールフォルダ内の `mods/` にコピー。
 
-    忘却森/
-    ├── 忘却森.exe
-    ├── mods/
-    │   ├── mod.txt
-    │   └── YourMod.fm
-    ├── config/
-    └── saves/
+```
+ForgetForest/
+├── ForgetForest.exe (Windows) / forget-forest (Linux)
+├── mods/
+│   ├── mod.txt
+│   └── YourMod.fm
+├── config/
+└── saves/
+```
 
 ### 3. mod.txtを確認
 
 以下になっているか確認。
 
-    enable = true
+```
+enable = true
+```
 
 ### 4. ゲーム起動
 
@@ -38,11 +43,31 @@
 タイトル画面の「Mod」ボタンから
 有効/無効を切り替え可能。
 
+## セキュリティ
+
+v2.0.0 では以下のセキュリティ機構が導入されています：
+
+- **ファイルサンドボックス**: Modがゲームフォルダ外にアクセスすることはできません
+- **ネットワーク通信**: Modが外部通信を行う場合、エラー処理が必須です
+- **Zip Slip対策**: 悪意ある `.fm` ファイルによる攻撃を防止
+
+!!! warning "注意"
+    Modは自己責任でお使いください。信頼できる作者のModのみを使用することをお勧めします。
+
 ## トラブルシューティング
 
 | 症状 | 対処 |
-| --- | --- |
-| Modメニューが出ない | mod.txtをenable=trueに |
-| Modがロードされない | .fmを再ダウンロード |
+|------|------|
+| Modメニューが出ない | `mod.txt` を `enable=true` に |
+| Modがロードされない | `.fm` を再ダウンロード |
 | ゲームがクラッシュ | Mod作者に報告 |
-| 実績が消えた | achievements.json確認 |
+| 実績が消えた | `achievements.json` 確認 |
+
+## Linux での実行
+
+展開後に実行権限がない場合：
+
+```bash
+chmod +x forget-forest
+./forget-forest
+```
